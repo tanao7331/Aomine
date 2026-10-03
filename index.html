@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ПОСЛЕДНИЙ ВЫПУСК [REMASTERED] - Психологическая Хоррор-Новелла</title>
+
+  <!-- Telegram WebApp SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Mobile Browser Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#000000">
+
+  <!-- Noir Stylesheet (Tiny Bunny Style) -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ====================================================================
+       PORTRAIT ORIENTATION WARNING (Mobile Helper)
+       ==================================================================== -->
+  <div id="orientation-warning">
+    <div class="phone-rotate-anim"></div>
+    <h2>ПОВЕРНИТЕ ЭКРАН</h2>
+    <p>Для погружения в психологическую хоррор-новеллу переверните ваше устройство в горизонтальный режим (Landscape 16:9).</p>
+  </div>
+
+  <!-- ====================================================================
+       16:9 LANDSCAPE VIEWPORT
+       ==================================================================== -->
+  <div id="game-viewport">
+    <div id="game-stage">
+
+      <!-- Background Visuals -->
+      <div id="bg-layer" class="layer"></div>
+
+      <!-- Character Sprites (High Contrast Noir Portraits) -->
+      <div id="character-layer" class="layer"></div>
+
+      <!-- Snow & Ash Particles Canvas -->
+      <canvas id="particles-canvas"></canvas>
+
+      <!-- Atmospheric Overlays -->
+      <div id="vignette-overlay" class="layer"></div>
+      <div id="grain-overlay" class="layer"></div>
+      <div id="flash-overlay" class="layer"></div>
+
+      <!-- Chapter Watermark Indicator -->
+      <div id="chapter-watermark">ПРОЛОГ: ПОСЛЕДНИЙ ЗВОНОК</div>
+
+      <!-- ================================================================
+           AUTHENTIC TINY BUNNY DIALOGUE BOX
+           ================================================================ -->
+      <div id="dialogue-area">
+        <!-- Speaker Nameplate with dry ink-brush stroke -->
+        <div id="nameplate-container">
+          <div id="speaker-name" class="narrator">Повествователь</div>
+          <svg class="nameplate-brush" viewBox="0 0 240 12" preserveAspectRatio="none">
+            <path d="M0,6 C30,2 90,1 180,6 C210,8 235,8 240,8 C220,10 160,11 80,11 C30,11 5,10 0,6 Z" fill="#000000" />
+            <path d="M0,7 C40,4 120,3 210,7 C160,9 60,9 0,8 Z" fill="#141418" />
+          </svg>
+        </div>
+
+        <!-- Dialogue Slate Box -->
+        <div id="dialogue-box">
+          <!-- Hide UI [✕] Button -->
+          <button id="btn-hide-ui" title="Скрыть интерфейс">✕</button>
+
+          <!-- Dialogue Text Content -->
+          <div id="text-content">...</div>
+
+          <!-- Bottom Controls Bar -->
+          <div class="dialogue-bottom-bar">
+            <div class="box-controls-left">
+              <button id="btn-phone" class="box-ctrl-btn" onclick="window.phoneSys.openPhone()">📱 ТЕЛЕФОН</button>
+              <button id="btn-backlog" class="box-ctrl-btn" onclick="window.game.toggleBacklog()">‹ ИСТОРИЯ</button>
+              <button id="btn-auto" class="box-ctrl-btn" onclick="window.game.toggleAutoPlay()">🔁 АВТО</button>
+              <button id="btn-skip" class="box-ctrl-btn" onclick="window.game.toggleSkipMode()">⏩ ПРОПУСК</button>
+              <button id="btn-menu" class="box-ctrl-btn" onclick="window.game.showMainMenu()">☰ МЕНЮ</button>
+              <button id="btn-info" class="box-ctrl-btn" onclick="window.game.showInfoModal()">ℹ СПРАВКА</button>
+            </div>
+            <div id="advance-indicator">
+              <span>ДАЛЕЕ</span>
+              <span class="advance-arrow">▼</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           CHOICES PANEL OVERLAY
+           ================================================================ -->
+      <div id="choices-container">
+        <div class="choices-card">
+          <div class="choice-prompt">Сделайте выбор:</div>
+          <div id="choices-list" class="choices-list">
+            <!-- Dynamically injected choice buttons -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           OFFICIAL DOSSIER / DOCUMENT INSPECTION MODAL
+           ================================================================ -->
+      <div id="document-modal">
+        <div class="document-card">
+          <img id="document-modal-img" src="" alt="Официальный документ">
+          <button class="document-close-btn" onclick="window.game.closeDocumentModal()">✕ ЗАКРЫТЬ ДОКУМЕНТ</button>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           HISTORY BACKLOG MODAL
+           ================================================================ -->
+      <div id="backlog-modal" class="modal-overlay">
+        <div class="modal-window">
+          <div class="modal-header">
+            <div class="modal-title">ИСТОРИЯ ДИАЛОГОВ</div>
+            <button class="modal-close" onclick="window.game.toggleBacklog()">✕</button>
+          </div>
+          <div id="backlog-list" class="modal-body">
+            <!-- Dynamic past lines -->
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           SAVE / LOAD MODAL
+           ================================================================ -->
+      <div id="save-modal" class="modal-overlay">
+        <div class="modal-window">
+          <div class="modal-header">
+            <div id="save-modal-title" class="modal-title">СОХРАНЕНИЕ ИГРЫ</div>
+            <button class="modal-close" onclick="window.game.closeSaveModal()">✕</button>
+          </div>
+          <div class="modal-body">
+            <div id="save-slots-grid" class="slots-grid">
+              <!-- 6 slots -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           INFO / CREDITS MODAL
+           ================================================================ -->
+      <div id="info-modal" class="modal-overlay">
+        <div class="modal-window">
+          <div class="modal-header">
+            <div class="modal-title">О ПРОЕКТЕ</div>
+            <button class="modal-close" onclick="window.game.closeInfoModal()">✕</button>
+          </div>
+          <div class="modal-body" style="line-height: 1.6; font-size: 15px; color: #cfcfdc;">
+            <h3 style="font-family: var(--font-speaker); letter-spacing: 1px; color: #fff; margin-bottom: 8px;">ПОСЛЕДНИЙ ВЫПУСК [REMASTERED: ANIME EDITION]</h3>
+            <p>Драматическая визуальная новелла в ярком аниме-стиле (по мотивам Classroom of the Elite), созданная специально для запуска через <strong>Telegram Mini App</strong> на смартфонах iOS и Android в горизонтальном режиме (Landscape 16:9). Включает полный лицензированный саундтрек, систему интерактивных выборов, инспекцию документов и разветвлённые сюжетные линии.</p>
+            <br>
+            <p><strong>Управление:</strong></p>
+            <ul style="padding-left: 20px; margin-top: 6px;">
+              <li>Клик по диалоговому окну: моментально показать весь текст / перейти к следующей реплике.</li>
+              <li>Кнопка [✕] в окне диалога: скрыть интерфейс для осмотра рисунка.</li>
+              <li>Кнопка [‹ ИСТОРИЯ]: открыть журнал прошлых диалогов.</li>
+              <li>Кнопка [🔁 АВТО]: включить режим автоматического чтения.</li>
+              <li>Кнопка [⏩ ПРОПУСК]: быстрый пропуск текста.</li>
+              <li>Кнопка [☰ МЕНЮ]: пауза, сохранение/загрузка и выбор глав.</li>
+              <li>На смартфонах включена тактильная отдача (Telegram Haptic Feedback).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           MAIN MENU OVERLAY
+           ================================================================ -->
+      <div id="main-menu" style="background-image: url('assets/backgrounds/title_screen_anime.jpg');">
+        <div class="menu-title-block">
+          <h1 class="menu-main-title">ПОСЛЕДНИЙ ВЫПУСК</h1>
+          <p class="menu-sub-title">ANIME VISUAL NOVEL • 18 ГЛАВ • 400+ СЦЕН • САУНДТРЕК</p>
+        </div>
+
+        <div class="menu-content-row">
+          <div class="menu-btn-list">
+            <button class="menu-action-btn" onclick="window.game.startGame('prologue_start')">▶ Начать с начала</button>
+            <button class="menu-action-btn" onclick="window.game.showSaveLoadModal('load')">📂 Загрузить сохранение</button>
+            <button class="menu-action-btn" onclick="window.game.showSaveLoadModal('save')">💾 Быстрое сохранение</button>
+            <button class="menu-action-btn" onclick="window.horrorAudio.toggleMute()">🔇 Звук: Вкл / Выкл</button>
+            <button class="menu-action-btn" onclick="window.game.showInfoModal()">ℹ Справка об игре</button>
+          </div>
+
+          <!-- Chapter Select Grid -->
+          <div class="chapter-scroll-container">
+            <div class="chapter-select-grid">
+              <div class="chapter-card-btn" onclick="window.game.startGame('prologue_start')">
+                <h4>ПРОЛОГ</h4>
+                <p>Последний звонок: 11 класс</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch1_start')">
+                <h4>ГЛАВА 1</h4>
+                <p>Первые трещины</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch2_start')">
+                <h4>ГЛАВА 2</h4>
+                <p>Тень за гаражами</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch3_start')">
+                <h4>ГЛАВА 3</h4>
+                <p>Бокс №24 (Никита)</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch4_start')">
+                <h4>ГЛАВА 4</h4>
+                <p>Ломка и признание</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch5_start')">
+                <h4>ГЛАВА 5</h4>
+                <p>Облава спецназа</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch6_start')">
+                <h4>ГЛАВА 6</h4>
+                <p>Суд: Статья 228 (15 лет строгого)</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch7_start')">
+                <h4>ГЛАВА 7</h4>
+                <p>Столичный мираж (Аслан)</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch8_start')">
+                <h4>ГЛАВА 8</h4>
+                <p>Башня «Федерация»</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch9_start')">
+                <h4>ГЛАВА 9</h4>
+                <p>Зеро и бездна лудомании</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch10_start')">
+                <h4>ГЛАВА 10</h4>
+                <p>Петля на 62-м этаже</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch11_start')">
+                <h4>ГЛАВА 11</h4>
+                <p>Аморальный хайп (Исмаил)</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch12_start')">
+                <h4>ГЛАВА 12</h4>
+                <p>Одиночка СИЗО-1 «Матросская Тишина»</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch13_start')">
+                <h4>ГЛАВА 13</h4>
+                <p>Статья 282 и ШИЗО</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch14_start')">
+                <h4>ГЛАВА 14</h4>
+                <p>Тишина на севере</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch15_start')">
+                <h4>ГЛАВА 15</h4>
+                <p>Империя IvanEnergy (Ваня)</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch16_start')">
+                <h4>ГЛАВА 16</h4>
+                <p>Военкомат и контракт</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch17_start')">
+                <h4>ГЛАВА 17</h4>
+                <p>Окопы под Малой Токмачкой</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('ch18_start')">
+                <h4>ГЛАВА 18</h4>
+                <p>Официальное извещение: Без вести пропавший</p>
+              </div>
+              <div class="chapter-card-btn" onclick="window.game.startGame('epilogue_start')">
+                <h4>ЭПИЛОГ</h4>
+                <p>Пустой класс</p>
+              </div>
+              <div class="chapter-card-btn" style="border: 1px solid #77ff88;" onclick="window.game.startGame('ending_nikita_rehab_1')">
+                <h4>ОСОБАЯ КОНЦОВКА 2</h4>
+                <p>Спасение Никиты (Реабилитация)</p>
+              </div>
+              <div class="chapter-card-btn" style="border: 1px solid #77ff88;" onclick="window.game.startGame('ending_aslan_saved_1')">
+                <h4>ОСОБАЯ КОНЦОВКА 3</h4>
+                <p>Выкуп Аслана (Отказ от славы)</p>
+              </div>
+              <div class="chapter-card-btn" style="border: 1px solid #ffdd44;" onclick="window.game.startGame('ending_true_brotherhood_1')">
+                <h4>СЕКРЕТНЫЙ ФИНАЛ</h4>
+                <p>Клятва 11-Б: Выжившие братья</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================================================================
+           SMARTPHONE OS & MESSENGER MODAL (32X EXPANSION)
+           ================================================================ -->
+      <div id="phone-modal">
+        <!-- Rendered by window.phoneSys -->
+      </div>
+
+      <!-- ================================================================
+           INTERACTIVE HORROR MINIGAMES OVERLAY
+           ================================================================ -->
+      <div id="minigame-container">
+        <!-- Rendered by window.horrorMinigames -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Game Scripts -->
+  <script src="js/story.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/phone_system.js"></script>
+  <script src="js/minigames.js"></script>
+  <script src="js/engine.js"></script>
+</body>
+</html>
